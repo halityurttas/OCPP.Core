@@ -57,15 +57,15 @@ namespace OCPP.Core.Server
             {
                 string chargepointIdentifier;
                 string[] parts = context.Request.Path.Value.Split('/');
-                if (string.IsNullOrWhiteSpace(parts[parts.Length - 1]))
+                if (string.IsNullOrWhiteSpace(parts[parts.Length - 2]))
                 {
                     // (Last part - 1) is chargepoint identifier
-                    chargepointIdentifier = parts[parts.Length - 2];
+                    chargepointIdentifier = parts[parts.Length - 3];
                 }
                 else
                 {
                     // Last part is chargepoint identifier
-                    chargepointIdentifier = parts[parts.Length - 1];
+                    chargepointIdentifier = parts[parts.Length - 2];
                 }
                 _logger.LogInformation("OCPPMiddleware => Connection request with chargepoint identifier = '{0}'", chargepointIdentifier);
 
@@ -164,6 +164,9 @@ namespace OCPP.Core.Server
                                 break;
                             }
                         }
+                        if (string.IsNullOrEmpty(subProtocol))
+                            subProtocol = Protocol_OCPP16;
+
                         if (string.IsNullOrEmpty(subProtocol))
                         {
                             // Not matching protocol! => failure
