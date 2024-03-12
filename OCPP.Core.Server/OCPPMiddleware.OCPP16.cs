@@ -86,21 +86,24 @@ namespace OCPP.Core.Server
                                     if (msgIn.Action == "Heartbeat")
                                     {
                                         OCPPMessage startTransactionMessage = new OCPPMessage();
-                                        startTransactionMessage.MessageType = "3";
-                                        startTransactionMessage.UniqueId = msgIn.UniqueId;
+                                        startTransactionMessage.MessageType = "2";
+                                        startTransactionMessage.UniqueId = Guid.NewGuid().ToString("N");
+                                        startTransactionMessage.Action = "RemoteStartTransaction";
                                         controller16.HandleRemoteStartTransaction(msgIn, startTransactionMessage);
                                         await SendOcpp16Message(startTransactionMessage, logger, chargePointStatus.WebSocket);
-
+                                        /*
                                         OCPPMessage stopTransactionMessage = new OCPPMessage();
-                                        stopTransactionMessage.MessageType = "3";
-                                        stopTransactionMessage.UniqueId = msgIn.UniqueId;
+                                        stopTransactionMessage.MessageType = "2";
+                                        stopTransactionMessage.UniqueId = Guid.NewGuid().ToString("N");
+                                        stopTransactionMessage.Action = "RemoteStopTransaction";
                                         controller16.HandleRemoteStopTransaction(msgIn, stopTransactionMessage);
 
                                         await Task.Run(async () =>
                                         {
-                                            Task.Delay(10 * 1000).Wait();
+                                            Task.Delay(30 * 1000).Wait();
                                             await SendOcpp16Message(stopTransactionMessage, logger, chargePointStatus.WebSocket);
                                         });
+                                        */
                                     }
                                 }
                                 else if (msgIn.MessageType == "3" || msgIn.MessageType == "4")
