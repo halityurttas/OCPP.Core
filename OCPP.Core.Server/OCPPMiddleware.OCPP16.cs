@@ -77,13 +77,31 @@ namespace OCPP.Core.Server
                                 if (msgIn.MessageType == "2")
                                 {
 
-
-
                                     // Request from chargepoint to OCPP server
                                     OCPPMessage msgOut = controller16.ProcessRequest(msgIn);
 
                                     // Send OCPP message with optional logging/dump
                                     await SendOcpp16Message(msgOut, logger, chargePointStatus.WebSocket);
+
+                                    if (msgIn.Action == "Heartbeat")
+                                    {
+                                        OCPPMessage startTransactionMessage = new OCPPMessage();
+                                        startTransactionMessage.MessageType = "3";
+                                        startTransactionMessage.UniqueId = msgIn.UniqueId;
+                                        controller16.HandleRemoteStartTransaction(msgIn, startTransactionMessage);
+                                        await SendOcpp16Message(startTransactionMessage, logger, chargePointStatus.WebSocket);
+
+                                        OCPPMessage stopTransactionMessage = new OCPPMessage();
+                                        stopTransactionMessage.MessageType = "3";
+                                        stopTransactionMessage.UniqueId = msgIn.UniqueId;
+                                        controller16.HandleRemoteStopTransaction(msgIn, stopTransactionMessage);
+
+                                        await Task.Run(async () =>
+                                        {
+                                            Task.Delay(10 * 1000).Wait();
+                                            await SendOcpp16Message(stopTransactionMessage, logger, chargePointStatus.WebSocket);
+                                        });
+                                    }
                                 }
                                 else if (msgIn.MessageType == "3" || msgIn.MessageType == "4")
                                 {
@@ -91,6 +109,7 @@ namespace OCPP.Core.Server
                                     if (_requestQueue.ContainsKey(msgIn.UniqueId))
                                     {
                                         controller16.ProcessAnswer(msgIn, _requestQueue[msgIn.UniqueId]);
+
                                         _requestQueue.Remove(msgIn.UniqueId);
                                     }
                                     else
