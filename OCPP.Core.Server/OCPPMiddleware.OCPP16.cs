@@ -86,13 +86,20 @@ namespace OCPP.Core.Server
 
                                     if (msgIn.Action == "Heartbeat" || msgIn.Action == "MeterValues")
                                     {
-                                        OCPPMessage remoteMessage = new OCPPMessage();
-                                        var remoteResult = controller16.HandleRemotes(msgIn, remoteMessage);
-
-                                        if (string.IsNullOrEmpty(remoteResult))
+                                        await Task.Run(async () =>
                                         {
-                                            await SendOcpp16Message(remoteMessage, logger, chargePointStatus.WebSocket);
-                                        }
+                                            Task.Delay(3000).Wait();
+
+                                            OCPPMessage remoteMessage = new OCPPMessage();
+                                            var remoteResult = controller16.HandleRemotes(msgIn, remoteMessage);
+
+                                            if (string.IsNullOrEmpty(remoteResult))
+                                            {
+                                                await SendOcpp16Message(remoteMessage, logger, chargePointStatus.WebSocket);
+                                            }
+                                        });
+
+                                        
 
                                         
                                         /*

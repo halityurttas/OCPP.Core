@@ -73,6 +73,8 @@ namespace OCPP.Core.Server
         {
             string errorCode = null;
 
+            Console.WriteLine("Send remote start");
+
             msgOut.MessageType = "2";
             msgOut.UniqueId = Guid.NewGuid().ToString("N");
             msgOut.Action = "RemoteStartTransaction";

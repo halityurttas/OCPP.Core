@@ -71,6 +71,7 @@ namespace OCPP.Core.Server
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseCors(e => e.AllowAnyHeader().AllowAnyOrigin().AllowAnyOrigin());
             }
 
             // Set WebSocketsOptions
