@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using OCPP.Core.Database;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -83,14 +84,17 @@ namespace OCPP.Core.Server
                                     // Send OCPP message with optional logging/dump
                                     await SendOcpp16Message(msgOut, logger, chargePointStatus.WebSocket);
 
-                                    if (msgIn.Action == "Heartbeat")
+                                    if (msgIn.Action == "Heartbeat" || msgIn.Action == "MeterValues")
                                     {
-                                        OCPPMessage startTransactionMessage = new OCPPMessage();
-                                        startTransactionMessage.MessageType = "2";
-                                        startTransactionMessage.UniqueId = Guid.NewGuid().ToString("N");
-                                        startTransactionMessage.Action = "RemoteStartTransaction";
-                                        controller16.HandleRemoteStartTransaction(msgIn, startTransactionMessage);
-                                        await SendOcpp16Message(startTransactionMessage, logger, chargePointStatus.WebSocket);
+                                        OCPPMessage remoteMessage = new OCPPMessage();
+                                        var remoteResult = controller16.HandleRemotes(msgIn, remoteMessage);
+
+                                        if (string.IsNullOrEmpty(remoteResult))
+                                        {
+                                            await SendOcpp16Message(remoteMessage, logger, chargePointStatus.WebSocket);
+                                        }
+
+                                        
                                         /*
                                         OCPPMessage stopTransactionMessage = new OCPPMessage();
                                         stopTransactionMessage.MessageType = "2";

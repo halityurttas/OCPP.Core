@@ -47,6 +47,7 @@ namespace OCPP.Core.Database
         public virtual DbSet<ConnectorStatusView> ConnectorStatusViews { get; set; }
         public virtual DbSet<MessageLog> MessageLogs { get; set; }
         public virtual DbSet<Transaction> Transactions { get; set; }
+        public virtual DbSet<Operation> Operations { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -175,6 +176,15 @@ namespace OCPP.Core.Database
                     .HasForeignKey(d => d.ChargePointId)
                     .OnDelete(DeleteBehavior.ClientSetNull)
                     .HasConstraintName("FK_Transactions_ChargePoint");
+            });
+
+            modelBuilder.Entity<Operation>(entity =>
+            {
+                entity.HasKey(e => e.OperationId);
+
+                entity.ToTable("Operations");
+
+                entity.Property(e => e.ChargePointId).HasMaxLength(100);
             });
 
             OnModelCreatingPartial(modelBuilder);

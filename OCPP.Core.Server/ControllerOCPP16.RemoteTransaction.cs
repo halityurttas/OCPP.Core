@@ -30,9 +30,52 @@ namespace OCPP.Core.Server
 {
     public partial class ControllerOCPP16
     {
+
+        public string HandleRemotes(OCPPMessage msgIn, OCPPMessage msgOut)
+        {
+            string errorCode = "NoAction";
+
+            try
+            {
+                using (OCPPCoreContext dbContext = new OCPPCoreContext(Configuration))
+                {
+                    Console.WriteLine(ChargePointStatus.Id);
+
+                    var lastOpt = dbContext.Operations.Where(m => m.ChargePointId == ChargePointStatus.Id && m.OpAllowed == 0).OrderBy(m => m.OperationId).LastOrDefault();
+                    if (lastOpt != null)
+                    {
+                        if (lastOpt.OpType == 1)
+                        {
+                            errorCode = HandleRemoteStartTransaction(msgIn, msgOut);
+                        }
+                        else if (lastOpt.OpType == 2)
+                        {
+                            errorCode = HandleRemoteStopTransaction(msgIn, msgOut, dbContext);
+                        }
+
+                        if (string.IsNullOrEmpty(errorCode))
+                        {
+                            lastOpt.OpAllowed = 1;
+                            dbContext.SaveChanges();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errorCode = ex.Message;
+            }
+
+            return errorCode;
+        }
+
         public string HandleRemoteStartTransaction(OCPPMessage msgIn, OCPPMessage msgOut)
         {
             string errorCode = null;
+
+            msgOut.MessageType = "2";
+            msgOut.UniqueId = Guid.NewGuid().ToString("N");
+            msgOut.Action = "RemoteStartTransaction";
 
             Logger.LogTrace("Processing Remote transaction start...");
             RemoteStartTransactionRequest remoteTransactionRequest = new RemoteStartTransactionRequest();
@@ -44,16 +87,31 @@ namespace OCPP.Core.Server
             return errorCode;
         }
 
-        public string HandleRemoteStopTransaction(OCPPMessage msgIn, OCPPMessage msgOut)
+        public string HandleRemoteStopTransaction(OCPPMessage msgIn, OCPPMessage msgOut, OCPPCoreContext dbContext)
         {
             string errorCode = null;
 
-            Logger.LogTrace("Processing Remote transaction start...");
-            RemoteStopTransactionRequest remoteTransactionRequest = new RemoteStopTransactionRequest();
-            remoteTransactionRequest.TransactionId = 1;
+            msgOut.MessageType = "2";
+            msgOut.UniqueId = Guid.NewGuid().ToString("N");
+            msgOut.Action = "RemoteStopTransaction";
 
-            msgOut.JsonPayload = JsonConvert.SerializeObject(remoteTransactionRequest);
-            Logger.LogTrace("RemoteTransactionStart => Response serialized");
+            try
+            {
+                var lastTrans = dbContext.Transactions.Where(m => m.ChargePointId == ChargePointStatus.Id).OrderBy(m => m.TransactionId).LastOrDefault();
+                if (lastTrans != null)
+                {
+                    Logger.LogTrace("Processing Remote transaction start...");
+                    RemoteStopTransactionRequest remoteTransactionRequest = new RemoteStopTransactionRequest();
+                    remoteTransactionRequest.TransactionId = lastTrans.TransactionId;
+
+                    msgOut.JsonPayload = JsonConvert.SerializeObject(remoteTransactionRequest);
+                    Logger.LogTrace("RemoteTransactionStart => Response serialized");
+                }
+            }
+            catch (Exception ex)
+            {
+                errorCode = ex.Message;
+            }
 
             return errorCode;
         }
