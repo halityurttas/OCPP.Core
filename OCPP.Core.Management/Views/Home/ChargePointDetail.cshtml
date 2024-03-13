@@ -153,6 +153,12 @@
                     <div class="col-sm-2">
                         <button type="button" class="btn btn-info" id="btnUnlock" title="@Localizer["TitleUnlockConnector"]" onclick="UnlockConnector()"><i class="fas fa-lock-open"></i> @Localizer["TitleUnlockConnector"]</button>
                     </div>
+                    <div class="col-sm-2">
+                        <button type="button" class="btn btn-info" id="btnUnlock" title="@Localizer["TitleStart"]" onclick="StartConnector()"><i class="fas fa-lock-open"></i> @Localizer["TitleStart"]</button>
+                    </div>
+                    <div class="col-sm-2">
+                        <button type="button" class="btn btn-info" id="btnUnlock" title="@Localizer["TitleStop"]" onclick="StopConnector()"><i class="fas fa-lock-open"></i> @Localizer["TitleStop"]</button>
+                    </div>
                 </div>
             }
         </div>
@@ -258,7 +264,103 @@
                 });
                 dialog.open();
             }
-            </script>
+
+                function StartConnector() {
+                    var dialog = new BootstrapDialog({
+                        title: '@Localizer["TitleStart"]',
+                        message: '@string.Format(Localizer["DialogReset"].Value, Model.Name)',
+                        spinicon: 'fa fa-spinner fa-fw',
+                        buttons: [{
+                            id: 'btnDialogReset',
+                            label: '@Localizer["TitleStart"]',
+                            icon: 'fas fa-redo',
+                            autospin: true,
+                            action: function (dialogRef) {
+                                dialogRef.enableButtons(false);
+                                dialogRef.setClosable(false);
+                                dialogRef.getModalBody().html('@Localizer["ExecuteStart"]');
+
+                                var xmlhttp = new XMLHttpRequest();
+                                xmlhttp.onreadystatechange = function () {
+                                    if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+                                        if (xmlhttp.status == 200) {
+                                            dialogRef.getModalBody().html(xmlhttp.responseText);
+                                        }
+                                        else {
+                                            dialogRef.getModalBody().html('@Localizer["ErrorStart"]');
+                                        }
+
+                                        dialogRef.setClosable(true);
+                                        dialogRef.enableButtons(true);
+                                        var $resetButton = dialog.getButton('btnDialogReset');
+                                        $resetButton.hide();
+                                        var $cancelButton = dialog.getButton('btnDialogCancel');
+                                        $cancelButton.text('@Localizer["Close"]');
+
+                                    }
+                                };
+                                xmlhttp.open("GET", "@Html.Raw(Url.Content("~/API/RemoteStart/" + Uri.EscapeDataString(Model.ChargePointId)))", true);
+                                xmlhttp.send();
+                            }
+                        }, {
+                            id: 'btnDialogCancel',
+                            label: '@Localizer["Cancel"]',
+                            action: function (dialogRef) {
+                                dialogRef.close();
+                            }
+                        }]
+                    });
+                    dialog.open();
+                }
+
+                function StopConnector() {
+                    var dialog = new BootstrapDialog({
+                        title: '@Localizer["TitleStop"]',
+                        message: '@string.Format(Localizer["DialogReset"].Value, Model.Name)',
+                        spinicon: 'fa fa-spinner fa-fw',
+                        buttons: [{
+                            id: 'btnDialogReset',
+                            label: '@Localizer["TitleStop"]',
+                            icon: 'fas fa-redo',
+                            autospin: true,
+                            action: function (dialogRef) {
+                                dialogRef.enableButtons(false);
+                                dialogRef.setClosable(false);
+                                dialogRef.getModalBody().html('@Localizer["ExecuteStop"]');
+
+                                var xmlhttp = new XMLHttpRequest();
+                                xmlhttp.onreadystatechange = function () {
+                                    if (xmlhttp.readyState == XMLHttpRequest.DONE) {
+                                        if (xmlhttp.status == 200) {
+                                            dialogRef.getModalBody().html(xmlhttp.responseText);
+                                        }
+                                        else {
+                                            dialogRef.getModalBody().html('@Localizer["ErrorStop"]');
+                                        }
+
+                                        dialogRef.setClosable(true);
+                                        dialogRef.enableButtons(true);
+                                        var $resetButton = dialog.getButton('btnDialogReset');
+                                        $resetButton.hide();
+                                        var $cancelButton = dialog.getButton('btnDialogCancel');
+                                        $cancelButton.text('@Localizer["Close"]');
+
+                                    }
+                                };
+                                xmlhttp.open("GET", "@Html.Raw(Url.Content("~/API/RemoteStop/" + Uri.EscapeDataString(Model.ChargePointId)))", true);
+                                xmlhttp.send();
+                            }
+                        }, {
+                            id: 'btnDialogCancel',
+                            label: '@Localizer["Cancel"]',
+                            action: function (dialogRef) {
+                                dialogRef.close();
+                            }
+                        }]
+                    });
+                    dialog.open();
+                }
+        </script>
         }
     }
 }
