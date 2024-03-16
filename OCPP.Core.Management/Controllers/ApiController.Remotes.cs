@@ -5,24 +5,23 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using OCPP.Core.Database;
+using OCPP.Core.Management.Actions;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace OCPP.Core.Management.Controllers
 {
-    public partial class ApiController : BaseController
+    [TypeFilter(typeof(GetLogin))]
+    public class RemoteController : BaseController
     {
+        public RemoteController(UserManager userManager, ILoggerFactory loggerFactory, IConfiguration config) : base(userManager, loggerFactory, config)
+        {
+        }
 
-        [Authorize]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> RemoteStart(string Id)
         {
-            if (User != null && !User.IsInRole(Constants.AdminRoleName))
-            {
-                Logger.LogWarning("Reset: Request by non-administrator: {0}", User?.Identity?.Name);
-                return StatusCode((int)HttpStatusCode.Unauthorized);
-            }
 
             if (!string.IsNullOrEmpty(Id))
             {
@@ -54,15 +53,10 @@ namespace OCPP.Core.Management.Controllers
             return StatusCode(StatusCodes.Status400BadRequest);
         }
 
-        [Authorize]
+        
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public async Task<IActionResult> RemoteStop(string Id)
         {
-            if (User != null && !User.IsInRole(Constants.AdminRoleName))
-            {
-                Logger.LogWarning("Reset: Request by non-administrator: {0}", User?.Identity?.Name);
-                return StatusCode((int)HttpStatusCode.Unauthorized);
-            }
 
             if (!string.IsNullOrEmpty(Id))
             {
